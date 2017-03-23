@@ -19,9 +19,10 @@ void setup()
  
   
 }
-class something{//class yazılacak
+
+/*class something{//class yazılacak
   
-};
+};*/
 
 void loop()
 {
