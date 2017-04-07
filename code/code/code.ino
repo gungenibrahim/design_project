@@ -29,33 +29,53 @@ void loop()
  
    int sensorValue = analogRead(A1);
    int softpotval = analogRead(A2);
-   int softpotpres = analogRead(A3);
-  // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
-  float voltage = sensorValue * (5.0 / 1023.0);
+   int stopflag =0;
+  
   // print out the value you read:
   Serial.println("flexsensor");
   Serial.println(sensorValue);
   Serial.println("softpot");
   Serial.println(softpotval);
-  Serial.println("softpotpressure");
-  Serial.println(softpotpres);
-  
-  //optimize yapılacak, maximum ve minimum değerler algılanıp referans noktası belirlenecek.
-  /*if(flag < 5){
-    svalueflex=sensor
-  }
-*/
-float diff2 = softpotval-365;
-Serial.println("sadwsa");
-  Serial.println(diff2);
-float diff1 = sensorValue-500;//flex sensor differences
-int difflex = diff1/20;
-int difsoftpot = diff2/10;
-Serial.println("afsaefeafffafdwafaefeafaef");
-  Serial.println(diff1);
+  int pwm1,pwm2;  
 
-int pwm1 = 30+difflex+difsoftpot;
-int pwm2= 30-difflex+difsoftpot;
+float softdistance = (softpotval-100)/20;
+Serial.println("softpotcm");
+  Serial.println(softdistance);
+float diff1 = sensorValue-375;//flex sensor differences
+int difflex = diff1/15;
+
+Serial.println("flexsensor");
+  Serial.println(difflex);
+
+if(470>softpotval>180){
+  difflex = difflex*8/softdistance;
+     
+ }
+
+ if(diff1 >0){
+         pwm2 = 30+difflex*difflex*difflex;
+         pwm1 = 30;}
+     else{
+         pwm1 = 30+4*difflex*difflex;
+         pwm2 = 30;
+     }
+ 
+if(softpotval<120){
+  pwm1= pwm1 =0;
+  pwm2= pwm2 =0;}
+
+
+ Serial.println(pwm2);
+  
+
+
+
+
+
+
+
+
+  
 // 10 pwm de yaklasÄ±k 6 cm/saniye yol alÄ±yor
  analogWrite(e1,pwm1);
  analogWrite(e2,pwm2);
@@ -68,7 +88,7 @@ int pwm2= 30-difflex+difsoftpot;
   
   
   
-  delay(1);
+  delay(1000);
   
 }
 

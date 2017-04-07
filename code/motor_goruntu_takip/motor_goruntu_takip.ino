@@ -39,8 +39,6 @@ class something{//class yazılacak
 void loop()
 {   int iB=0;
 
-  int pwm1;
-  int pwm2;
   if(Serial.available()>0)
   {iB=Serial.read()-'0';
   Serial.println(iB,DEC);
