@@ -4,7 +4,7 @@ int in3=5;
 int in4=4;
 int e1=10;
 int e2=9;
-int role_select=1; //role selection pin if high, robot is right role, left otherwise
+
 void setup()
 {
   Serial.begin(9600);
@@ -26,13 +26,14 @@ int position_control(int s,int f)
 void loop()
 {
   int role_analog = analogRead(A5);
-  Serial.println(role_analog);
+  int role_select;
+
   if(role_analog <500){
-    int role_select = 0;
+    role_select = 0;//role selection pin if high, robot is right role, left otherwise
     
   }
   else if(role_analog>=500){
-    int role_select =1;
+    role_select =1;
   }
 
   int pwm1,pwm2;
@@ -64,6 +65,8 @@ void loop()
        
 
           while(1){
+              Serial.println("role_analog"); 
+             Serial.println(role_analog);
             int flag1=0;
             int softpot_total=0;
             int flex_total =0;
@@ -98,32 +101,41 @@ void loop()
             flex_ave = flex_total/10;
             softpot_ave= softpot_total/10;
 
-
+            Serial.println("flex_ave");
+            Serial.println(flex_ave);
+            Serial.println("softpot_ave");
+            Serial.println(softpot_ave);
              
               //int softPot_1_Position=map(softpotVal,180,580,0,400);
               
               int flexposition=map(flex_ave,300,600,0,300);
 
-              int flex_ref = 180; //flex sensor reference value
+              int flex_ref = 170; //flex sensor reference value
 
               int flex_difference = flexposition-flex_ref;
+              flex_difference = flex_difference/20;
+                Serial.println("flex_difference");
+                Serial.println(flex_difference);
 
               //arranging turning refereance
 
               int flag_stop = 0;
               int ref_turn =0;
-
+              
+            Serial.println("softpot_ave");
+             Serial.println(softpot_ave);
               if(316>softpot_ave>250){ 
                 ref_turn = 0;
               }
-              else if(200<softpot_ave<250){
-                flex_ref = 200;
-                ref_turn = -7;
+              if(200<softpot_ave<250){
+                //flex_ref = 200;
+               // ref_turn = -7;
               }
-              else if(200<softpot_ave<250){
-                pwm1 =0;
-                pwm2 =0;
-                flag_stop =1;  // buraya girerse dursun artık 
+              if(200>softpot_ave){
+                pwm1 = 0;
+                pwm2 = 0;
+                flag_stop = 1;  // buraya girerse dursun artÄ±k 
+                Serial.println("1dsafsegdsrghjhyjrtfgdfesrgffffffffffffffffffffffffffffff");
               }
 
 
@@ -132,16 +144,21 @@ void loop()
 
               if(flex_difference>=0){
 
-                  pwm2 = 30 + flex_difference*flex_difference*flex_difference +ref_turn; //dısa dogru hareket
-                  pwm1 =20+ref_turn;
+                  pwm2 = 30 + flex_difference*flex_difference*flex_difference +ref_turn; //dÄ±sa dogru hareket
+                  pwm1 = 30 + ref_turn;
+                  
               }
               else if(flex_difference<400){
-                  pwm1 =30+ 4*flex_difference*flex_difference +ref_turn; //ice dogru hareket
-                  pwm2 =30 +ref_turn;
+                  pwm1 =30+ flex_difference*flex_difference*flex_difference/(-1) +ref_turn; //ice dogru hareket
+                  pwm2 =30 + ref_turn;
                 }
               }     
 
-
+             Serial.println("pwm1");
+             Serial.println(pwm1);
+             
+             Serial.println("pwm2");
+             Serial.println(pwm2);
 
              /*
               //shows object location on softpot sensor
@@ -165,9 +182,9 @@ void loop()
               analogWrite(e1,pwm1);
               analogWrite(e2,pwm2);
                           
-            //  if (role_select==0){
-            //    break;
-            //  }
+            if (role_select==0){
+              break;
+            }
 
               delay(1000);
         }
@@ -184,7 +201,8 @@ if(role_select==0)
        digitalWrite(in2,HIGH);
        digitalWrite(in3,HIGH);
        digitalWrite(in4,LOW);
-       
+
+      while(1){ 
       if(Serial.available()>0)
       {
         if(iB==3)
@@ -289,8 +307,20 @@ if(role_select==0)
         }
         analogWrite(e1,pwm1);
         analogWrite(e2,pwm2);
+        
+        Serial.println("pwm11111");
+        Serial.println(pwm1);
+             
+        Serial.println("pwm22222");
+        Serial.println(pwm2);
 
+
+      }
+      if (role_select==1){
+              break;
+            }
       }
   }
 }
 }
+
