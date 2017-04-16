@@ -113,7 +113,7 @@ void loop()
               int flag_stop = 0;
               int ref_turn =0;
 
-              if(316<softpot_ave>250){ 
+              if(316>softpot_ave>250){ 
                 ref_turn = 0;
               }
               else if(200<softpot_ave<250){
@@ -174,32 +174,123 @@ void loop()
 //  }
   
 
-  if(role_select==0)
-  {     while(role_select==0)
-        { //right
-          int softpotVal=analogRead(A0);
-          
-          int softPotPosition=map(softpotVal,0,1023,0,100);
-
-          if(softPotPosition==0)
+if(role_select==0)
+  {     
+      int iB=0;
+      int pwm1;
+      int pwm2;
+      int softpotVal_2;
+       digitalWrite(in1,LOW);
+       digitalWrite(in2,HIGH);
+       digitalWrite(in3,HIGH);
+       digitalWrite(in4,LOW);
+       
+      if(Serial.available()>0)
+      {
+        if(iB==3)
+        {
+          softpotVal_2=analogRead(A0);
+          if(220<softpotVal_2<260)
           {
-            pwm1=0;
-            pwm2=0;
+            pwm1=30;
+            pwm2=30;
           }
-
-
-
-        
-              analogWrite(e1,pwm1);
-              analogWrite(e2,pwm2);
-                          
-              digitalWrite(in1,LOW);
-              digitalWrite(in2,HIGH);
-              digitalWrite(in3,HIGH);
-              digitalWrite(in4,LOW);
-              delay(1000);
-
+          else if(softpotVal_2>260)
+          {
+            pwm1=30+8;
+            pwm2=30+8;
+          }
+          else if(softpotVal_2<220)
+          {
+            pwm1=30-8;
+            pwm2=30-8;
+          }
+          
         }
+        if(iB==5)
+        {
+          softpotVal_2=analogRead(A0);
+          if(220<softpotVal_2<260)
+          {
+            pwm1=15;
+            pwm2=30;
+          }
+          else if(softpotVal_2>260)
+          {
+            pwm1=15+8;
+            pwm2=30+16;
+          }
+          else if(softpotVal_2<220)
+          {
+            pwm1=15-4;
+            pwm2=30-8;
+          }
+          
+        }
+        if(iB==4)
+        {
+          softpotVal_2=analogRead(A0);
+          if(220<softpotVal_2<260)
+          {
+            pwm1=22;
+            pwm2=30;
+          }
+          else if(softpotVal_2>260)
+          {
+            pwm1=22+4;
+            pwm2=30+6;
+          }
+          else if(softpotVal_2<220)
+          {
+            pwm1=22-4;
+            pwm2=30-6;
+          }
+          
+        }
+        if(iB==2)
+        {
+          softpotVal_2=analogRead(A0);
+          if(220<softpotVal_2<260)
+          {
+            pwm1=30;
+            pwm2=22;
+          }
+          else if(softpotVal_2>260)
+          {
+            pwm1=30+6;
+            pwm2=22+4;
+          }
+          else if(softpotVal_2<220)
+          {
+            pwm1=30-6;
+            pwm2=22-4;
+          }
+          
+        }
+        if(iB==1)
+        {
+          softpotVal_2=analogRead(A0);
+          if(220<softpotVal_2<260)
+          {
+            pwm1=30;
+            pwm2=15;
+          }
+          else if(softpotVal_2>260)
+          {
+            pwm1=30+16;
+            pwm2=15+8;
+          }
+          else if(softpotVal_2<220)
+          {
+            pwm1=30-8;
+            pwm2=15-4;
+          }
+          
+        }
+        analogWrite(e1,pwm1);
+        analogWrite(e2,pwm2);
+
+      }
   }
 }
 }
