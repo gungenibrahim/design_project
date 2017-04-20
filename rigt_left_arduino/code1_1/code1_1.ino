@@ -21,7 +21,7 @@ void setup()
 int pwm1,pwm2;
 int role;
 int extra_pwm_1=0;
-
+int flag_stop = 0;
             
 
 int soft_read(int role) // code for both softpot 0>> right role soft pot, 1>> left role softpot
@@ -45,11 +45,12 @@ int soft_read(int role) // code for both softpot 0>> right role soft pot, 1>> le
             while(flag1<10)
             { 
             
-             if(role = 0){
-              softpotVal = analogRead(A2);// softpot sensor value for right robot
+             if(role == 0){
+              softpotVal = analogRead(A0);// softpot sensor value for right robot
+          
              }
-             else if(role = 1){
-              softpotVal = analogRead(A0);// softpot sensor value for left robot	<<<<<< pini gir
+             else if(role == 1){
+              softpotVal = analogRead(A2);// softpot sensor value for left robot	<<<<<< pini gir
 
              }   
                 
@@ -68,9 +69,11 @@ int soft_read(int role) // code for both softpot 0>> right role soft pot, 1>> le
              
              for(int i=0; i<10; i++){
               softpot_total = softpot_total + soft_array[i];
-
+               
             }
+            
             softpot_ave= softpot_total/10;
+           
 
             return softpot_ave;
             
@@ -132,6 +135,7 @@ void right_role(int role_select){
 
 		int flex_ave = 0;
 		int softpot_ave = 0;
+    int extra_ref =0;
 		
 		    digitalWrite(in1,LOW);
         digitalWrite(in2,HIGH);
@@ -152,12 +156,20 @@ void right_role(int role_select){
 			      role =0;
                  
           	flex_ave = flex_read(); 
-          	softpot_ave = soft_read(role);
+          	softpot_ave = soft_read(role);////////////
+           
 
-             int flex_ref = 420; //flex sensor reference value
+             int flex_ref = 400; //flex sensor reference value
+             if(softpot_ave<700){
+             extra_ref = (50/200)*(softpot_ave-650) ;}
+             else if(850>softpot_ave>700){
+              extra_ref = (50/100)*(softpot_ave-650);
+             }
+             flex_ref = flex_ref+extra_ref;////   flex referansı kaydırdık
 
              int flex_difference = flex_ave-flex_ref;
-              flex_difference = flex_difference/20;
+                
+                flex_difference = flex_difference/20;
                
                /* Serial.println("flex_difference");
                 Serial.println(flex_difference);
@@ -165,86 +177,55 @@ void right_role(int role_select){
 
               //arranging turning refereance
 
-              int flag_stop = 0;
+              
               int ref_turn =0;
-              ////////////////////////////////////////////////////////////////////////////////
+              ///////////////////////////////////////////////////////////////////////////////
+            
 
-
-            /* Serial.println("softpot_ave");
-             Serial.println(softpot_ave);
-             */
-              extra_pwm_1 = 0;
-              if(700>softpot_ave>480){ 
-                extra_pwm_1 = 0;
-              }
-              if(softpot_ave<480){
-                flex_ref = 430;
-                extra_pwm_1 = 1;        // hızlanma referansı
-              }
-              if(700<softpot_ave){
-                extra_pwm_1 = 0;
-                 // buraya girerse dursun artÄ±k 
-
-             
-
-                  pwm1 = -1* pwm1;
-                  pwm2 = -1* pwm2;
-    
-              
-              Serial.println("pwm1");
-              Serial.println(pwm1);
-              Serial.println("pwm2");
-              Serial.println(pwm2);
+              if(850<softpot_ave){
                 
-              analogWrite(e1,pwm1);
-              analogWrite(e2,pwm2);
+                extra_pwm_1 = 0;
+                 // buraya girerse dursun artÃ„Â±k 
+
+                  digitalWrite(in1,HIGH);
+                  digitalWrite(in2,LOW);
+                  digitalWrite(in3,LOW);
+                  digitalWrite(in4,HIGH);           
               
+              softpot_ave = soft_read(role);
                
-                while(700<softpot_ave){
+                while(850<softpot_ave){
                   
-                	softpot_ave = soft_read(role);
+               softpot_ave = soft_read(role);
+           
+              }
 
-                  if(700>softpot_ave>480){
-                     pwm1 = 0;
-                     pwm2 = 0;
-
-                     
-                 analogWrite(e1,pwm1);
-                 analogWrite(e2,pwm2);
-                 
-                
-                  }
-
-                  delay(1000);
-
-                }
-
-               
                 flag_stop = 1; 
                 
-             }
+              }
+             
 
-               ///////////////////////////////////////////////////////////////////////////////////////
-
-               if (softpot_ave = 0){
-                     pwm1 = 0;
-                     pwm2 = 0;
-
-                
-                }
+             
               
               ////////////////////////////////////////////////////////////////////////////////////////
-              while(flag_stop){           // dengeye gelene kadar geri geri gidiyor
+            
+              while(flag_stop){           // dengeye gelene kadar geri geri gidiyor sonra duruyor
+               
                softpot_ave = soft_read(role);
 
-                 Serial.println("pwm1");
-                   Serial.println(pwm1);
-             
-                 Serial.println("pwm2");
-                 Serial.println(pwm2);
+                if(softpot_ave>480){
+               // flex_ref = 420;
+                extra_pwm_1 = 0;        // hÄ±zlanma referansÄ±
+              }
+
+               digitalWrite(in1,LOW);
+               digitalWrite(in2,LOW);
+               digitalWrite(in3,LOW);
+               digitalWrite(in4,LOW);
+              
                 if( softpot_ave<480){
-                  
-                 
+                                               
+                  extra_pwm_1 = 1;
                   
                   flag_stop = 0;
                   }
@@ -265,24 +246,29 @@ void right_role(int role_select){
         
         if(flag_stop == 0){
 
+            digitalWrite(in1,LOW);
+            digitalWrite(in2,HIGH);
+            digitalWrite(in3,HIGH);
+            digitalWrite(in4,LOW);
+
               if(flex_difference>=0){
 
-                  pwm2 = 30 + flex_difference*flex_difference*flex_difference; //dÄ±sa dogru hareket
+                  pwm2 = 30 +flex_difference*flex_difference; //dÃ„Â±sa dogru hareket
                   pwm1 = 30;
 
               
               
               }
               else if(flex_difference<0){               
-                  pwm1 =30+ flex_difference*flex_difference*flex_difference/(-1); //ice dogru hareket
+                  pwm1 =30+ flex_difference*flex_difference; //ice dogru hareket
                   pwm2 =30;
                   
                 
                 }
 
                  if(extra_pwm_1){
-                    pwm1 = 1.2*pwm1;
-                    pwm2 = 1.2*pwm2;
+                    pwm1 == 1.5*pwm1;
+                    pwm2 == 1.5*pwm2;
                   }
               }   
 
@@ -291,10 +277,10 @@ void right_role(int role_select){
 
 
              
-			        Serial.println("pwm1");
+			        Serial.println("pwm111111111111111111111111111");
              Serial.println(pwm1);
              
-             Serial.println("pwm2");
+             Serial.println("pwm222222222222222222222222222");
              Serial.println(pwm2);
 
              /*
@@ -503,5 +489,6 @@ if(role_select==0)
       }
   }
 }
+
 
 
