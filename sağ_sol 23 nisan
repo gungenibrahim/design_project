@@ -9,9 +9,23 @@ int e1=10;
 int e2=9;
 
 double Setpoint1, Input1, Output1;
+/*
 double aggKp=10, aggKi=10, aggKd=10;
 double consKp=2, consKi=2, consKd=2;
-PID myPID_soft_left(&Input1, &Output1, &Setpoint1, consKp, consKi, consKd, DIRECT);
+*/
+
+double aggKp=8, aggKi=8, aggKd=10;
+double consKp=8, consKi=8, consKd=10;
+PID myPID_soft_left(&Input1, &Output1, &Setpoint1, consKp, consKi, consKd,REVERSE);
+
+double Setpoint2,Input2,Output2;
+
+double agg2Kp=1000, agg2Ki=1, agg2Kd=1;
+double cons2Kp=1000, cons2Ki=1, cons2Kd=1;
+PID myPID_camera(&Input2, &Output2, &Setpoint2, cons2Kp, cons2Ki, cons2Kd, DIRECT);
+
+
+
 
 void setup()
 {
@@ -22,10 +36,13 @@ void setup()
   pinMode(in4,OUTPUT);
   pinMode(e1,OUTPUT);
   pinMode(e2,OUTPUT);
-
+  myPID_camera.SetMode(AUTOMATIC);
   myPID_soft_left.SetMode(AUTOMATIC);
-  Setpoint1 = 650;
+  
+  Setpoint2=3;
+  Setpoint1=3;
   Input1=soft_read(1);
+  Input2=3;
 
  }
 
@@ -36,6 +53,18 @@ int role;
 int extra_pwm_1=0;
 int role_select;
 
+int speed_to_pwm(double s){
+
+double p1 = 0.003435;
+double p2 = -0.1168;
+double p3 = 1.512;
+double p4 = -6.685;
+double p5 = 26.8;
+
+
+return round(p1*pow(s,4)+p2*pow(s,3)+p3*pow(s,2)+p4*pow(s,1)+p5);
+
+}
 
 int role_checker()
 { int role_analog = analogRead(A5);
@@ -53,7 +82,7 @@ int role_checker()
 int soft_read(int role) // code for both softpot 0>> right role soft pot, 1>> left role softpot
 
 {      
-
+      int a;
       int soft_array[10] ={0,0,0,0,0,0,0,0,0,0};
         
         /*
@@ -97,9 +126,22 @@ int soft_read(int role) // code for both softpot 0>> right role soft pot, 1>> le
 
             }
             softpot_ave= softpot_total/10;
- 
-            return softpot_ave;
-  
+                
+         if(softpot_ave>450 &&  softpot_ave<520)
+         a=1;
+       if(softpot_ave>520 && softpot_ave<570)
+         a=2;
+         if(softpot_ave>570 && softpot_ave<680)
+         a=3;
+         if(680<softpot_ave && softpot_ave<820)
+         a=4;
+         if(softpot_ave>820)
+         a=5; 
+         if(softpot_ave==0)
+         a=0;
+      
+    return a;
+
 }
 
 int flex_read(){
@@ -163,30 +205,20 @@ void left_role_2(){
   digitalWrite(in2,HIGH);
   digitalWrite(in3,HIGH);
   digitalWrite(in4,LOW);
-
+  int pwm_ext=0;
   while(1){
 
-   myPID_soft_left.SetOutputLimits(10, 50);
+   myPID_soft_left.SetOutputLimits(20,50);
+   myPID_camera.SetOutputLimits(10,20);
    
    
-    Input1 = soft_read(1);
   
-   double gap = abs(Setpoint1-Input1); //distance away from setpoint
   
-  if (gap < 50)
-  {  //we're close to setpoint, use conservative tuning parameters
-    myPID_soft_left.SetTunings(consKp, consKi, consKd);
-  }
-  else
-  {
-     //we're far from setpoint, use aggressive tuning parameters
-     myPID_soft_left.SetTunings(aggKp, aggKi, aggKd);
-  }
- 
- myPID_soft_left.Compute();
+  
 
-    pwm1 = pwm2 = Output1;
 
+   
+    
 
          while(Serial.available()>0)
               {softpot_avg_Val_2=soft_read(1);
@@ -194,41 +226,207 @@ void left_role_2(){
                 Serial.println(softpot_avg_Val_2);
                 iB=Serial.read()-'0';
 
-                      if(iB==3)
+                 Input1 = soft_read(1);
+  
+                   double gap = abs(Setpoint1-Input1); //distance away from setpoint
+                  
+                  if (gap <2)
+                  {  //we're close to setpoint, use conservative tuning parameters
+                    myPID_soft_left.SetTunings(consKp, consKi, consKd);
+                  }
+                  else
+                  {
+                     //we're far from setpoint, use aggressive tuning parameters
+                     myPID_soft_left.SetTunings(aggKp, aggKi, aggKd);
+                  }
+          
+                   myPID_soft_left.Compute();
+
+                   pwm1 = pwm2 = Output1;
+
+                  Serial.println("Output1");
+                  Serial.println(Output1);
+                  Serial.println("input1");
+                  Serial.println(Input1);
+                  Serial.println("Output2");
+                  Serial.println(Output2);
+                int Input2=iB;
+                int gap2=abs(Setpoint2-Input2);
+                if(gap2<2)
+                {
+                  myPID_camera.SetTunings(cons2Kp, cons2Ki, cons2Kd);
+                  }
+                  else
+                {
+                  myPID_camera.SetTunings(agg2Kp, agg2Ki, agg2Kd);
+                  }
+                 
+                  
+                  myPID_camera.Compute();
+                  
+                  pwm_ext=Output2;
+
+                  Serial.println("output1");
+                  Serial.println(Output1);
+                  Serial.println("output2");
+                  Serial.println(Output2);
+                  delay(1000);
+
+                   pwm1=pwm1;
+                   pwm2=pwm2+pwm_ext;
+                
+                  /*    if(iB==3)
+                       {  
+                        if(softpot_avg_Val_2==0)
+                          {
+                             pwm1=pwm2=0;
+                             
+                          }
+                          else
+                          {
+                            pwm1=pwm1;
+                            pwm2=pwm2+pwm_ext;
+                            }
+                        if(softpot_avg_Val_2<3)
+                        {
+                          pwm1=pwm1*0.5;
+                          pwm2=pwm2*0.5;
+                        }
+                        if(softpot_avg_Val_2>3)
+                        {
+                          pwm1=pwm1*1.5;
+                          pwm2=pwm2*1.5;
+                        }
+                        if(softpot_avg_Val_2==3)
+                        {
+                          pwm1;
+                          pwm2;
+                        }
+                        }*/
+
+                      /*if(iB==5)
+                        {
+                          if(softpot_avg_Val_2==0)
+                          {
+                            pwm1=pwm2=0;
+                          }
+                          else
+                          {
+                            pwm1=pwm1;
+                            pwm2=pwm2+pwm_ext;
+                            }
+                          if(softpot_avg_Val_2<3)
+                          {
+                            pwm1=0.25*pwm1;
+                            pwm2=0.5*pwm2;
+                          }
+                          if(softpot_avg_Val_2>3)
+                          {
+                            pwm1=pwm1;
+                            pwm2=pwm2*2;
+                          }
+                          if(softpot_avg_Val_2==3)
+                             {
+                              pwm1 = 0.5*pwm1;
+                              pwm2 = pwm2;
+                           }
+                        }*/
+
+                      /*if(iB==4)
+                        {
+                          if(softpot_avg_Val_2==0)
+                          {
+                            pwm1=pwm2=0;
+                          }
+                          else
+                          {
+                            pwm1=pwm1;
+                            pwm2=pwm2+pwm_ext;
+                            }
+                          
+                          if(softpot_avg_Val_2<3)
+                          {
+                            pwm1=pwm1*0.5625;
+                            pwm2=pwm2*0.75;
+                          }
+                          if(softpot_avg_Val_2>3)
+                          {
+                            pwm1=pwm1;
+                            pwm2=pwm2*1.333;
+                          }
+                          if(softpot_avg_Val_2==3)
+                            { pwm1 = 0.75*pwm1;
+                              pwm2 = pwm2;
+                        
+                          }
+                       }*/
+                      /*if(iB==2)
+                        {
+                          if(softpot_avg_Val_2==0)
+                          {
+                            pwm1=pwm2=0;
+                          }
+                          else
+                          {
+                            pwm1=pwm1;
+                            pwm2=pwm2+pwm_ext;
+                            }
+                          
+                          if(softpot_avg_Val_2<3)
+                          {
+                            pwm1=pwm1*0.75;
+                            pwm2=pwm2*0.5625;
+                          }
+                          if(softpot_avg_Val_2>3)
+                          {
+                            pwm1=pwm1*1.33;
+                            pwm2=pwm2;
+                          }
+                          if(softpot_avg_Val_2==3)
+                          {
+
+                              pwm1 = pwm1;
+                              pwm2 = 0.75*pwm2;
+                          }
+                        }*/
+
+                      /*if(iB==1)
                        {
-                             pwm1;
-                             pwm2;
-                        }
-
-                      if(iB==5)
-                        {
-                             pwm1 = 0.5*pwm1;
-                             pwm2 = pwm2;
-                        }
-
-                      if(iB==4)
-                        {
-                            pwm1 = 0.75*pwm1;
-                            pwm2 = pwm2;
-                        }
-
-                      if(iB==2)
-                        {
+                          if(softpot_avg_Val_2==0)
+                          {
+                            pwm1=pwm2=0;
+                          }
+                          else
+                          {
+                            pwm1=pwm1;
+                            pwm2=pwm2+pwm_ext;
+                            }
+                          
+                          if(softpot_avg_Val_2<3)
+                          {
+                            pwm1=0.5*pwm1;
+                            pwm2=0.25*pwm2;
+                          }
+                          if(softpot_avg_Val_2>3)
+                          {
+                            pwm1=2*pwm1;
+                            pwm2=pwm2;
+                          }
+                          if(softpot_avg_Val_2==3)
+                          {
+                              pwm2 = 0.5*pwm2;
                             pwm1 = pwm1;
-                            pwm2 = 0.75*pwm2;
-                        }
-
-                      if(iB==1)
-                       {
-                            pwm1 = pwm1;
-                            pwm2 = 0.5*pwm2;
-                       }
+                          }
+                       }*/
 
                        if(iB==0)
                        {
                         pwm1=pwm2=0;
                        }
-
+                       if(Input1==0)
+                       {
+                        pwm1=pwm2=0;
+                       }
                        
                        
                 analogWrite(e1,pwm2);
@@ -255,6 +453,10 @@ void left_role_2(){
   
               }
 
+  
+  
+  
+  
               role_select=role_checker();             
            
             if (role_select==1)
@@ -265,6 +467,10 @@ void left_role_2(){
 
   
   }
+
+
+
+
 ////////////////////////////////////////////
 /*
 void left_role(int role_2)
@@ -517,7 +723,11 @@ void right_role(){
                   }
                 
               }
-    
+
+            
+              
+              
+              
               Serial.println("flex_ave");
              Serial.println(flex_ave);
              Serial.println("softpot_ave");
@@ -549,6 +759,11 @@ void right_role(){
                   }
               }   
 
+
+
+
+
+             
               Serial.println("pwm1");
              Serial.println(pwm1);
              
@@ -572,6 +787,8 @@ void right_role(){
               }
 
         */
+
+
               analogWrite(e1,pwm1);
               analogWrite(e2,pwm2);
              role_select=role_checker();             
@@ -586,6 +803,14 @@ void right_role(){
 
               }
           }
+
+
+
+
+              
+
+
+
 
 void loop()
 {
@@ -608,8 +833,10 @@ void loop()
 if(role_select==0)
   {
     left_role_2();
+    delay(1000);
 }
 }
+
 
 
 
