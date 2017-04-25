@@ -26,6 +26,8 @@ counter = 0
 (dX, dY) = (0, 0)
 (x, y) = (0, 0)
 direction = ""
+w=0
+h=0
  
 # if a video path was not supplied, grab the reference
 # to the webcam
@@ -62,7 +64,7 @@ while True:
 # find contours in the mask and initialize the current
 	# (x, y) center of the ball
 	cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-		cv2.CHAIN_APPROX_SIMPLE)[-2]
+		cv2.CHAIN_APPROX_NONE)[0]
 	center = None
  
 	# only proceed if at least one contour was found
@@ -72,7 +74,7 @@ while True:
 		# centroid
 		c = max(cnts, key=cv2.contourArea)
 		((x, y), radius) = cv2.minEnclosingCircle(c)
-		 #x,y,w,h = cv2.boundingRect(cnt)
+		x1,y1,w,h = cv2.boundingRect(c)
                 
 		
 		M = cv2.moments(c)
@@ -144,11 +146,17 @@ while True:
 		# otherwise, compute the thickness of the line and
 		# draw the connecting lines
 		thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 2.5)
-		cv2.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
+		#cv2.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
 
 	# show the movement deltas and the direction of movement on
 	# the frame
-	cv2.putText(frame, direction, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+
+	cv2.putText(frame, str(w), (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.65, (0, 0, 255), 3)
+
+	cv2.putText(frame, direction, (80, 30), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.65, (0, 0, 255), 3)
+	cv2.putText(frame, str(h), (30, 50), cv2.FONT_HERSHEY_SIMPLEX,
                     0.65, (0, 0, 255), 3)
 	#cv2.line(frame,(0,0),(511,511),(255,0,0),5)
 	
