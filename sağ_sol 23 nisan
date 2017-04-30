@@ -20,8 +20,8 @@ PID myPID_soft_left(&Input1, &Output1, &Setpoint1, consKp, consKi, consKd,REVERS
 
 double Setpoint2,Input2,Output2;
 
-double agg2Kp=1000, agg2Ki=1, agg2Kd=1;
-double cons2Kp=1000, cons2Ki=1, cons2Kd=1;
+double agg2Kp=1, agg2Ki=0, agg2Kd=0;
+double cons2Kp=1, cons2Ki=0, cons2Kd=0;
 PID myPID_camera(&Input2, &Output2, &Setpoint2, cons2Kp, cons2Ki, cons2Kd, DIRECT);
 
 
@@ -209,7 +209,7 @@ void left_role_2(){
   while(1){
 
    myPID_soft_left.SetOutputLimits(20,50);
-   myPID_camera.SetOutputLimits(10,20);
+   //myPID_camera.SetOutputLimits(5,20);
    
    
   
@@ -250,8 +250,10 @@ void left_role_2(){
                   Serial.println(Input1);
                   Serial.println("Output2");
                   Serial.println(Output2);
+
+
                 int Input2=iB;
-                int gap2=abs(Setpoint2-Input2);
+                double gap2=abs(Setpoint2-Input2);
                 if(gap2<2)
                 {
                   myPID_camera.SetTunings(cons2Kp, cons2Ki, cons2Kd);
