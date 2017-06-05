@@ -222,7 +222,7 @@ int serial_read(void) //read serial data from raspi
               {               
                 iB=Serial.read()-'0';  
               }
-  delay(100);
+  delay(120);
 
   
   return iB;  

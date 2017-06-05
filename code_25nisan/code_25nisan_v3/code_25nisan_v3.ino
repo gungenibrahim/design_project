@@ -206,7 +206,7 @@ int serial_read(void) //read serial data from raspi
               {               
                 iB=Serial.read()-'0';  
               }
-  delay(120);
+  delay(90);
 
   
   return iB;  
@@ -276,7 +276,7 @@ int speed_ar(int soft_real){
       if(soft_real > 650){
         a = 1;
       }
-      else if(soft_real<550){
+      else if(soft_real<450){
         a = -1;
       }
       else{
@@ -293,6 +293,9 @@ int trace_left(void){
     pwm2 = 0;
   
   iB = serial_read();
+  //Serial.println("iB");
+  //Serial.println(iB);
+
   
      if(iB==3){
     
@@ -346,10 +349,16 @@ void left_role_2()   // left robot operation
 
         
                iB= serial_read();
+               Serial.println("fsedfsefsedfsfs");
+               Serial.println(iB);
+               
                //softpot_dis = soft_read_left();
                softpot_real = soft_read_real(1);
                ref = speed_ar(softpot_real); // softpot değeri balon ortadaysa 0 verir
 
+               //Serial.println("aaaaaaaaaaaaaaaaaaasoft");
+               //Serial.println(ref);
+               
                pwm1 = 0;
                pwm2 = 0;
        
@@ -387,10 +396,10 @@ void left_role_2()   // left robot operation
                 
    
              
-                Serial.println("pwm1");
-                Serial.println(pwm1);
-                Serial.println("pwm2");
-                Serial.println(pwm2);
+                //Serial.println("pwm1");
+                //Serial.println(pwm1);
+                //Serial.println("pwm2");
+                //Serial.println(pwm2);
           
   
             role_select=role_checker();                       
@@ -576,10 +585,10 @@ void right_role() //right role operation of the robot
         analogWrite(e1,pwm2);
         analogWrite(e2,pwm1);
              
-       Serial.println("pwm1");
-       Serial.println(pwm1);
-       Serial.println("pwm2");
-       Serial.println(pwm2);
+      // Serial.println("pwm1");
+       //Serial.println(pwm1);
+      // Serial.println("pwm2");
+       //Serial.println(pwm2);
 
       role_select=role_checker();                        
             if (role_select==0)

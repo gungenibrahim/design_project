@@ -8,16 +8,7 @@ int in4=4;
 int e1=10;
 int e2=9;
 
-double Setpoint1, Input1, Output1;
-double aggKp=6, aggKi=8, aggKd=10; //best ---> 8 8 10
-double consKp=1, consKi=1, consKd=1;
-PID myPID_soft_left(&Input1, &Output1, &Setpoint1, consKp, consKi, consKd,REVERSE);
-
-double Setpoint2,Input2,Output2;
-double agg2Kp= 5 , agg2Ki=1, agg2Kd=0.5; //1,0.5,
-double cons2Kp= 5, cons2Ki=1, cons2Kd=0.5;
-PID myPID_camera(&Input2, &Output2, &Setpoint2, cons2Kp, cons2Ki, cons2Kd, REVERSE);
-
+/////////////////////////////////////////////////
 int pwm1;
 int pwm2;
 int role;
@@ -47,15 +38,8 @@ void setup()
   pinMode(in4,OUTPUT);
   pinMode(e1,OUTPUT);
   pinMode(e2,OUTPUT);
-  myPID_camera.SetMode(AUTOMATIC);
-  myPID_soft_left.SetMode(AUTOMATIC);
-    
-  Setpoint2=3;
-  Setpoint1=3;
-  Input1=soft_read_left();
-  Input2=serial_read();
-}
 
+}
 
 
 
@@ -222,7 +206,7 @@ int serial_read(void) //read serial data from raspi
               {               
                 iB=Serial.read()-'0';  
               }
-  delay(100);
+  delay(70);
 
   
   return iB;  
@@ -275,48 +259,35 @@ float flex_read()  //read flex sensor real values
               glob_loc =loc;
             }
 
-            Serial.println("loc");
-            Serial.println(loc);
-
-             Serial.println("glob_loc");
-            Serial.println(glob_loc);
-            
+       
                         
             return glob_loc;
 }
 
 
-int left_assistant() // arrange flex sensor refereance speed
-{
-  int ref=0;
-  if(ref >0 ){
-    
-  int konum = soft_read_left();
-  ref = konum -3;
-  ref = ref*3;
-  }
-  return ref;
-}
-
-
 int speed_ar(int soft_real){
-  int a =0;
-  if(soft_real > 650){
-    a = 1;
-  }
-  else if(soft_real<550){
-    a = -1;
-  }
-  else{
-    a= 0;
-  }
   
-  return a;
+      int a =0;
+      if(soft_real > 650 && soft_real < 750){
+        a = 1;
+      }
+      else if(soft_real > 750){
+        a=2;
+      }
+      else if(soft_real<550){
+        a = -1;
+      }
+      else if(soft_real < 650 && soft_real > 550)
+      {  a= 0;
+      }
+      
+      return a;
 }
 
 
 int trace_left(void){
   int iB=6;
+   
   
   iB = serial_read();
   
@@ -351,6 +322,84 @@ int trace_left(void){
   
 }
 
+void trace_left_agg_1(void){
+
+    int iB=6;
+   
+  
+  iB = serial_read();
+  
+       if(iB==3){
+    
+       pwm1 = 40;
+       pwm2 = 47;
+    }
+     else if(iB==5){
+       
+       pwm1 = 20;
+       pwm2 = 40;
+    }
+    else if(iB==4){
+   
+    
+       pwm1 = 28;
+       pwm2 = 40;        
+    }
+    else if(iB==2){
+       pwm1 = 40;
+       pwm2 = 33;
+    }
+    else if(iB==1){
+      pwm1 = 40;
+      pwm2 = 30 ;
+    }
+  else if(iB==0){
+      pwm1 = 0;
+      pwm2 = 0 ;
+      }
+  
+  
+}
+
+void trace_left_agg_2(void){
+
+    int iB=6;
+   
+  
+  iB = serial_read(); 
+  
+       if(iB==3){
+    
+       pwm1 = 50;
+       pwm2 = 60;
+    }
+     else if(iB==5){
+       
+       pwm1 = 20;
+       pwm2 = 60;
+    }
+    else if(iB==4){
+   
+    
+       pwm1 = 30;
+       pwm2 = 55;        
+    }
+    else if(iB==2){
+       pwm1 = 50;
+       pwm2 = 40;
+    }
+    else if(iB==1){
+      pwm1 = 50;
+      pwm2 = 43 ;
+    }
+  else if(iB==0){
+      pwm1 = 0;
+      pwm2 = 0 ;
+      }
+  
+  
+}
+
 
 
 void left_role_2()   // left robot operation
@@ -375,21 +424,49 @@ void left_role_2()   // left robot operation
                iB= serial_read();
                //softpot_dis = soft_read_left();
                softpot_real = soft_read_real(1);
-               ref = speed_ar(softpot_real);
-       
+               ref = speed_ar(softpot_real); // softpot değeri balon ortadaysa 0 verir
+
+               //pwm1 = 0;
+               //pwm2 = 0;
+
+
+                if(iB == 0){
+                    pwm1 = 0;
+                    pwm2 = 0;
+                  }
+
+                else{
+                  
                 if(ref == 0){
 
                   /// sağ sol aranacak
                   trace_left();
                   
                 }
-                else {
                 
-                  pwm1 = 25+15.0*ref;
-                  pwm2 = 25+25.0*ref ;
-                  
+                else if(ref ==1 ){
+                  trace_left_agg_1();
+                }
+
+                else if(ref == 2){
+                  trace_left_agg_2();
                 }
                 
+                else if(ref == -1){
+                  
+                    if(softpot_real == 0 ){
+                      pwm1 = 0;
+                      pwm2 = 0;
+                    }
+                    
+                    else{
+                      pwm1 = 25+15.0*ref;
+                      pwm2 = 25+25.0*ref ;
+                    }
+                    
+                  
+                }
+                }
                 
                 analogWrite(e1,pwm2);
                 analogWrite(e2,pwm1);
@@ -398,7 +475,7 @@ void left_role_2()   // left robot operation
                 
    
              
-              Serial.println("pwm1");
+                Serial.println("pwm1");
                 Serial.println(pwm1);
                 Serial.println("pwm2");
                 Serial.println(pwm2);
@@ -500,16 +577,16 @@ void right_role() //right role operation of the robot
         
         
         if(softpot_dis <3){
-          flex_ref=3.5;
+          flex_ref=3.6;
         }
         else if(softpot_dis == 3 ){
-          flex_ref=3.0;
+          flex_ref=3.1;
         }
         else if(softpot_dis == 4 ){
-          flex_ref =2.0;
+          flex_ref =1.1;
         }
         else{
-          flex_ref =1.0;
+          flex_ref =0.9;
         }
         
         
@@ -530,7 +607,7 @@ void right_role() //right role operation of the robot
         
     }
         
-    if(softpot_dis==5){
+    if(softpot_dis==5 || softpot_dis==4 ){
             extra_pwm_1 = 0;
                  // buraya girerse dursun artÄ±k  
             pwm1 = 0;
@@ -554,20 +631,21 @@ void right_role() //right role operation of the robot
 
 //pwm2 --> sol teker
 //pwm1--> sağ teker
-    
+
+     
       if(flag_stop == 0){
 
       if(flex_difference<=0){
 
-                pwm2 = 27 -  flex_difference*(-1); //sola dogru hareket
-                pwm1 = 27 + 6*flex_difference*(-1);
+                pwm2 = 27 -  3*flex_difference*(-1); //sola dogru hareket
+                pwm1 = 27 + 7*flex_difference*(-1);
       
         }
       
               
       else if(flex_difference>0){               
-                pwm1 =27-flex_difference; //sağa dogru hareket
-                pwm2 =27 + 6*flex_difference;
+                pwm1 =27- 3*flex_difference; //sağa dogru hareket
+                pwm2 =27 + 7*flex_difference;
    
         }
              
@@ -582,7 +660,7 @@ void right_role() //right role operation of the robot
                 pwm1 = 0;
                 pwm2 = 0;            
       }
-
+    
               
         analogWrite(e1,pwm2);
         analogWrite(e2,pwm1);
@@ -597,7 +675,7 @@ void right_role() //right role operation of the robot
                   break;
             
 
-              delay(1000);
+             // delay(1000);
 
     }
               
@@ -609,35 +687,20 @@ void loop() // main loop function
   
   role_select=role_checker();
 
-  Serial.println("aa");
-  Serial.println(role_select);
+  //Serial.println("aa");
+  //Serial.println(role_select);
  
   if(role_select==1)  //right robot role
-  {
+  {   
+        pwm1 = 0;
+        pwm2 = 0;
         right_role();  
     }
 
   if(role_select==0) // left robot role
   {   
+      pwm1 = 0;
+      pwm2 = 0;
       left_role_2();
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
